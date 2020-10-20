@@ -41,8 +41,12 @@ public class Login extends AppCompatActivity {
     private GoogleApi mGoogleApiClient;
     private static final int RC_SIGN_IN = 9001;
 
-    String web_client_id = "866707318062-dvfnlul7hek96557j696edufag5t6c1h.apps.googleusercontent.com";
-    String web_client_secret = "9CLBU-OSVVUSeShqxPFHRQqs";
+    String web_client_id = getResources().getString(R.string.web_client_id);
+    String web_client_secret = getResources().getString(R.string.web_client_secret);
+
+    String django_client_id = getResources().getString(R.string.django_client_id);
+    String django_client_secret = getResources().getString(R.string.django_client_secret);
+
     private SharedPreferences sharedPreferences;
 
 
@@ -51,6 +55,8 @@ public class Login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        sharedPreferences = this.getSharedPreferences("TOKENS", Context.MODE_PRIVATE);
 
 
 
@@ -165,8 +171,14 @@ public class Login extends AppCompatActivity {
 
 
                     editor.putString("google_access_token",jsonObject.getString("access_token"));
-                    editor.putString("google_refresh_token",jsonObject.getString("refresh_token"));
+//                    editor.putString("google_refresh_token",jsonObject.getString("refresh_token"));
                     editor.apply();
+
+
+                    // get the DRF token too....
+
+
+                    this.getDRFToken(jsonObject.getString("access_token"));
 
 
 
@@ -181,6 +193,68 @@ public class Login extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
+
+            private void getDRFToken(String access_token) {
+
+                OkHttpClient client = new OkHttpClient();
+
+                RequestBody requestBody1 = new FormEncodingBuilder()
+                        .add("grant_type", "convert_token")
+                        .add("client_id",django_client_id)
+                        .add("client_secret",django_client_secret)
+                        .add("backend","google-oauth2")
+                        .add("token",access_token)
+                        .build();
+                final Request request = new Request.Builder()
+                        .url("http://192.168.2.106:8000/auth/convert-token")
+                        .post(requestBody1)
+                        .build();
+
+
+
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Request request, IOException e) {
+                        Log.e("onFailure2", e.toString());
+                    }
+
+                    @Override
+                    public void onResponse(Response response) throws IOException {
+                        JSONObject jsonObject = null;
+                        try {
+                            jsonObject = new JSONObject(response.body().string());
+                            final String message = jsonObject.toString(5);
+
+
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+
+                            editor.putString("drf_access_token",jsonObject.getString("access_token"));
+                            editor.putString("drf_refresh_token",jsonObject.getString("refresh_token"));
+
+                            editor.apply();
+
+
+
+
+
+                            Log.i("onResponse----->DRF", message);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                });
+
+
+
+
+
+
+
+
+            }
         });
 
 
@@ -192,6 +266,7 @@ public class Login extends AppCompatActivity {
 
 
     }
+
 
 
 

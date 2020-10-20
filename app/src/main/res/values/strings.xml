@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">VoiceConnect Z+</string>
+    <string name="web_client_id">Your GOOGLE CLIENT  ID</string>
+    <string name="web_client_secret"> YOUR GOOGLE CLIENT SECRET</string>
+    <string name="django_client_id">YOU GENERATED APP client ID in DJANGO</string>
+    <string name="django_client_secret">YOU GENERATED APP client SECRET in DJANGO</string>
+
 </resources>
